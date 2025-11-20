@@ -62,7 +62,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                contato@casaitaquanduba.com.br
+                contato@thiagoac.com.br
               </li>
             </ul>
           </div>
@@ -79,7 +79,7 @@ export default function Footer() {
                 <Instagram className="w-5 h-5" />
               </a>
               <a
-                href="https://wa.me/5511992364885"
+                href="https://wa.me/551231990710"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#2EC4B6] transition-colors"
