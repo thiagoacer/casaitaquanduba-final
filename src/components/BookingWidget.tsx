@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Calendar, Users, Loader2, AlertCircle, CheckCircle, ChevronDown } from 'lucide-react';
+import { Users, Loader2, AlertCircle, CheckCircle, Calendar as CalendarIcon, ChevronDown, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface PricingRules {
@@ -16,19 +16,25 @@ interface Totals {
 }
 
 export default function BookingWidget() {
+  // Estados do Formulário
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState('2');
+  
+  // Estados do Lead (Só aparecem depois)
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   
+  // Estados de Controle
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [showLeadForm, setShowLeadForm] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [totals, setTotals] = useState<Totals | null>(null);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
 
+  // Preços Padrão
   const [pricing, setPricing] = useState<PricingRules>({
     base_price: 800,
     weekend_multiplier: 1.2,
@@ -36,7 +42,7 @@ export default function BookingWidget() {
     min_nights: 2
   });
   
-  // 1. Carregar Dados (Banco de Dados)
+  // 1. CARREGAR DADOS
   useEffect(() => {
     async function loadData() {
       try {
@@ -58,17 +64,16 @@ export default function BookingWidget() {
     loadData();
   }, []);
 
-  // 2. Cálculo Seguro (Sem Loop)
+  // 2. CÁLCULO DE PREÇO
   const calculateValues = useCallback(() => {
     if (!checkIn || !checkOut) return null;
     const start = new Date(checkIn);
     const end = new Date(checkOut);
-    
     const diffTime = end.getTime() - start.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < pricing.min_nights) return null;
-    if (diffDays > 45) return null; 
+    if (diffDays > 60) return null; 
 
     let totalPrice = 0;
     let currentDate = new Date(start);
@@ -76,11 +81,7 @@ export default function BookingWidget() {
     for (let i = 0; i < diffDays; i++) {
       const dayOfWeek = currentDate.getDay(); 
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6;
-      
-      totalPrice += isWeekend 
-        ? pricing.base_price * pricing.weekend_multiplier 
-        : pricing.base_price;
-
+      totalPrice += isWeekend ? pricing.base_price * pricing.weekend_multiplier : pricing.base_price;
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
@@ -91,12 +92,20 @@ export default function BookingWidget() {
     };
   }, [checkIn, checkOut, pricing]);
 
+  // Atualiza totais e controla a exibição do formulário de Lead
   useEffect(() => {
     const result = calculateValues();
     setTotals(result);
-  }, [calculateValues]);
+    
+    // Se tiver datas válidas e totais calculados, mostramos o form de lead
+    if (result && checkIn && checkOut) {
+      setShowLeadForm(true);
+    } else {
+      setShowLeadForm(false);
+    }
+  }, [calculateValues, checkIn, checkOut]);
 
-  // 3. Validação de Datas
+  // 3. VALIDAÇÃO
   const isDateBlocked = (dateStr: string) => blockedDates.includes(dateStr);
 
   const checkAvailability = () => {
@@ -113,11 +122,16 @@ export default function BookingWidget() {
 
   const isAvailable = checkAvailability();
 
+  // 4. ENVIO
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAvailable) return;
+    if (!name || !email || !phone) {
+      setErrorMessage('Por favor, preencha seus dados de contato.');
+      return;
+    }
+
     setLoading(true);
-    
     const { error } = await supabase.from('booking_inquiries').insert([{
         guest_name: name, guest_email: email, guest_phone: phone,
         check_in: checkIn, check_out: checkOut, num_guests: parseInt(guests),
@@ -132,145 +146,150 @@ export default function BookingWidget() {
     }
     setLoading(false);
   };
-  // --- TELA DE SUCESSO ---
+
+  // TELA DE SUCESSO
   if (status === 'success') {
     return (
-      <div className="bg-white p-8 rounded-2xl shadow-xl text-center border-2 border-[#2EC4B6]/20 animate-in fade-in zoom-in duration-300">
+      <div className="bg-white p-8 rounded-2xl shadow-xl text-center border-2 border-[#2EC4B6]/20 animate-in fade-in zoom-in">
         <div className="w-20 h-20 bg-[#E5F6F5] rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle className="w-10 h-10 text-[#2EC4B6]" />
         </div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-3">Solicitação Enviada!</h3>
-        <p className="text-gray-600 mb-8 leading-relaxed">
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">Reserva Solicitada!</h3>
+        <p className="text-gray-600 mb-6">
           Recebemos seu pedido para <strong>{new Date(checkIn).toLocaleDateString('pt-BR')}</strong>.<br/>
-          Vamos verificar a disponibilidade final e te chamar no WhatsApp em instantes.
+          Verifique seu WhatsApp em breve.
         </p>
-        <button onClick={() => setStatus('idle')} className="text-[#0A7B9B] font-bold hover:text-[#08607a] transition-colors">
+        <button onClick={() => setStatus('idle')} className="text-[#0A7B9B] font-bold hover:underline">
           Fazer nova simulação
         </button>
       </div>
     );
   }
 
-  // --- WIDGET PRINCIPAL ---
   return (
-    <div className="bg-white p-6 lg:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 sticky top-24">
+    <div className="bg-white rounded-2xl shadow-[0_6px_30px_rgba(0,0,0,0.12)] border border-gray-200 overflow-hidden sticky top-24">
       
-      {/* CABEÇALHO DE PREÇO */}
-      <div className="flex items-baseline justify-between mb-6 border-b border-gray-100 pb-6">
-        <div>
-          <span className="text-3xl font-bold text-gray-900">R$ {pricing.base_price}</span>
-          <span className="text-gray-500 ml-1">/ noite</span>
-        </div>
-        <div className="text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md">
-          Min. {pricing.min_nights} noites
+      {/* HEADER DO CARD */}
+      <div className="p-6 border-b border-gray-100">
+        <div className="flex items-end justify-between">
+          <div>
+            <span className="text-2xl font-bold text-gray-900">R$ {pricing.base_price}</span>
+            <span className="text-gray-500 text-sm"> noite</span>
+          </div>
+          <div className="flex items-center gap-1 text-sm text-gray-600">
+            <Star className="w-4 h-4 fill-current text-[#0A7B9B]" />
+            <span className="font-medium">Superhost</span>
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* DATAS */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Check-in</label>
-            <div className="relative group">
-              <input
-                type="date"
-                min={new Date().toISOString().split('T')[0]}
-                value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#2EC4B6] focus:border-transparent outline-none transition-all text-gray-700 font-medium"
-                required
-              />
-            </div>
+      <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        
+        {/* BOX DE DATAS (ESTILO AIRBNB) */}
+        <div className="border border-gray-400 rounded-xl overflow-hidden grid grid-cols-2 relative">
+          {/* CHECK-IN */}
+          <div className="p-3 border-r border-gray-400 hover:bg-gray-50 transition-colors relative">
+            <label className="block text-[10px] font-bold text-gray-800 uppercase tracking-wider mb-1">Check-in</label>
+            <input
+              type="date"
+              min={new Date().toISOString().split('T')[0]}
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
+              className="w-full bg-transparent p-0 text-sm text-gray-700 font-medium outline-none cursor-pointer placeholder-transparent"
+              required
+            />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Check-out</label>
-            <div className="relative group">
-              <input
-                type="date"
-                min={checkIn || new Date().toISOString().split('T')[0]}
-                value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#2EC4B6] focus:border-transparent outline-none transition-all text-gray-700 font-medium"
-                required
-              />
+
+          {/* CHECK-OUT */}
+          <div className="p-3 hover:bg-gray-50 transition-colors relative">
+            <label className="block text-[10px] font-bold text-gray-800 uppercase tracking-wider mb-1">Check-out</label>
+            <input
+              type="date"
+              min={checkIn || new Date().toISOString().split('T')[0]}
+              value={checkOut}
+              onChange={(e) => setCheckOut(e.target.value)}
+              className="w-full bg-transparent p-0 text-sm text-gray-700 font-medium outline-none cursor-pointer"
+              required
+            />
+          </div>
+
+          {/* HÓSPEDES (LINHA DE BAIXO) */}
+          <div className="col-span-2 border-t border-gray-400 p-3 hover:bg-gray-50 transition-colors relative flex items-center justify-between">
+            <div className="w-full">
+              <label className="block text-[10px] font-bold text-gray-800 uppercase tracking-wider mb-1">Hóspedes</label>
+              <select 
+                value={guests} 
+                onChange={(e) => setGuests(e.target.value)} 
+                className="w-full bg-transparent text-sm text-gray-700 font-medium outline-none appearance-none cursor-pointer"
+              >
+                {[1,2,3,4,5,6,7,8].map(num => <option key={num} value={num}>{num} hóspedes</option>)}
+              </select>
             </div>
+            <ChevronDown className="w-5 h-5 text-gray-500 pointer-events-none" />
           </div>
         </div>
 
-        {/* HÓSPEDES */}
-        <div className="space-y-1">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Hóspedes</label>
-          <div className="relative">
-            <Users className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
-            <select 
-              value={guests} 
-              onChange={(e) => setGuests(e.target.value)} 
-              className="w-full p-3 pl-11 pr-10 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#2EC4B6] focus:border-transparent outline-none appearance-none text-gray-700 font-medium cursor-pointer hover:bg-gray-100 transition-colors"
-            >
-              {[1,2,3,4,5,6,7,8].map(num => <option key={num} value={num}>{num} pessoas</option>)}
-            </select>
-            <ChevronDown className="absolute right-4 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
+        {/* MENSAGEM DE ERRO DE DATA */}
+        {!isAvailable && checkIn && checkOut && (
+          <div className="bg-red-50 text-red-600 text-xs p-3 rounded-lg flex items-center gap-2 animate-in slide-in-from-top-2">
+            <AlertCircle className="w-4 h-4" /> Datas indisponíveis.
           </div>
-        </div>
+        )}
 
-        {/* RESUMO DE VALORES (Animado) */}
-        {totals && isAvailable && (
-          <div className="mt-6 pt-6 border-t border-gray-100 animate-in slide-in-from-top-4 fade-in duration-300 space-y-4">
+        {/* ÁREA EXPANSÍVEL (CAPTAÇÃO DO LEAD) */}
+        {showLeadForm && isAvailable && totals && (
+          <div className="animate-in slide-in-from-top-4 fade-in duration-500 pt-4 space-y-4">
             
-            {/* Linhas de Cálculo */}
-            <div className="space-y-2 text-sm text-gray-600">
-              <div className="flex justify-between">
-                <span>{totals.nights} noites x R$ {totals.perNight} (médio)</span>
+            {/* Resumo de Preço */}
+            <div className="space-y-2 pb-4 border-b border-gray-100">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span className="underline decoration-gray-300">{totals.nights} noites x R$ {totals.perNight}</span>
                 <span>R$ {(totals.total - pricing.cleaning_fee).toLocaleString('pt-BR')}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Taxa de limpeza</span>
+              <div className="flex justify-between text-sm text-gray-600">
+                <span className="underline decoration-gray-300">Taxa de limpeza</span>
                 <span>R$ {pricing.cleaning_fee.toLocaleString('pt-BR')}</span>
+              </div>
+              <div className="flex justify-between text-base font-bold text-gray-900 pt-2">
+                <span>Total</span>
+                <span>R$ {totals.total.toLocaleString('pt-BR')}</span>
               </div>
             </div>
 
-            {/* Total Final */}
-            <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-              <span className="font-bold text-gray-900">Total estimado</span>
-              <span className="text-xl font-bold text-[#0A7B9B]">R$ {totals.total.toLocaleString('pt-BR')}</span>
-            </div>
-
-            {/* Inputs de Contato */}
-            <div className="space-y-3 pt-2">
+            {/* Inputs do Lead */}
+            <div className="space-y-3">
+              <p className="text-xs font-semibold text-gray-500 uppercase">Seus dados para reserva</p>
               <input type="text" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} 
-                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2EC4B6] outline-none transition-shadow" required />
-              <input type="email" placeholder="Seu melhor email" value={email} onChange={(e) => setEmail(e.target.value)} 
-                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2EC4B6] outline-none transition-shadow" required />
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#2EC4B6] outline-none" />
+              
+              <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} 
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#2EC4B6] outline-none" />
+              
               <input type="tel" placeholder="WhatsApp / Celular" value={phone} onChange={(e) => setPhone(e.target.value)} 
-                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2EC4B6] outline-none transition-shadow" required />
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#2EC4B6] outline-none" />
             </div>
+            
+            {errorMessage && <p className="text-red-500 text-xs text-center">{errorMessage}</p>}
           </div>
         )}
 
-        {/* AVISO DE INDISPONIBILIDADE */}
-        {!isAvailable && checkIn && checkOut && (
-          <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm flex items-center gap-3 border border-red-100 animate-in shake">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span className="font-medium">Ops! Essas datas já estão reservadas. Tente outros dias.</span>
-          </div>
-        )}
-
-        {/* BOTÃO DE AÇÃO */}
+        {/* BOTÃO PRINCIPAL */}
         <button
           type="submit"
-          disabled={loading || !isAvailable || !totals}
-          className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 transform
-            ${loading || !isAvailable || !totals
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' 
-              : 'bg-gradient-to-r from-[#0A7B9B] to-[#2EC4B6] text-white hover:shadow-xl hover:-translate-y-1 active:translate-y-0'
+          disabled={loading || !isAvailable}
+          className={`w-full py-3.5 rounded-xl font-bold text-lg text-white shadow-md transition-all transform active:scale-95
+            ${loading 
+              ? 'bg-gray-300 cursor-not-allowed' 
+              : 'bg-gradient-to-r from-[#E61E4D] to-[#D80565] hover:brightness-110' // Cor estilo Airbnb
             }`}
         >
-          {loading ? <Loader2 className="animate-spin" /> : 'Solicitar Reserva'}
+          {loading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : (showLeadForm ? 'Reservar' : 'Verificar disponibilidade')}
         </button>
-
-        <p className="text-xs text-center text-gray-400 font-medium">
-          Nenhuma cobrança será feita agora.
+        
+        <p className="text-xs text-center text-gray-500">
+          Não cobraremos nada agora.
         </p>
+
       </form>
     </div>
   );
