@@ -111,7 +111,7 @@ export default function CTASection() {
             className="flex items-center gap-2 hover:text-white/80 transition-colors"
           >
             <Phone className="w-5 h-5" />
-            <span>(11) 99236-4885</span>
+            <span>(12) 3199-0710</span>
           </a>
           <a
             href="mailto:contato@thiagoac.com.br"
