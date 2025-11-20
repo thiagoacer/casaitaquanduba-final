@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Bloquear áreas administrativas (Segurança)
+Disallow: /admin
+Disallow: /admin/*
+
+# Indicar onde está o mapa do site
+Sitemap: https://casaitaquanduba.com.br/sitemap.xml
