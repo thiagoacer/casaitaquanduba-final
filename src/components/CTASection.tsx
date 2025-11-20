@@ -85,7 +85,7 @@ export default function CTASection() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
           <a
-            href="https://wa.me/5511992364885?text=Olá!%20Gostaria%20de%20consultar%20disponibilidade%20para%20a%20Casa%20Itaquanduba"
+            href="https://wa.me/551231990710?text=Olá!%20Gostaria%20de%20consultar%20disponibilidade%20para%20a%20Casa%20Itaquanduba"
             target="_blank"
             rel="noopener noreferrer"
             className="bg-white text-[#0A7B9B] px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-2xl inline-flex items-center justify-center gap-2"
@@ -105,7 +105,7 @@ export default function CTASection() {
 
         <div className="flex flex-wrap justify-center gap-6 text-white">
           <a
-            href="https://wa.me/5511992364885"
+            href="https://wa.me/551231990710"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 hover:text-white/80 transition-colors"
@@ -114,11 +114,11 @@ export default function CTASection() {
             <span>(11) 99236-4885</span>
           </a>
           <a
-            href="mailto:contato@casaitaquanduba.com.br"
+            href="mailto:contato@thiagoac.com.br"
             className="flex items-center gap-2 hover:text-white/80 transition-colors"
           >
             <Mail className="w-5 h-5" />
-            <span>contato@casaitaquanduba.com.br</span>
+            <span>contato@thiagoac.com.br</span>
           </a>
           <a
             href="https://instagram.com/casaitaquanduba"
