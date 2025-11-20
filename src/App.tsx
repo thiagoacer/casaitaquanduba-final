@@ -18,10 +18,12 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminBookings from './pages/AdminBookings';
 import AdminContacts from './pages/AdminContacts';
 import AdminPricing from './pages/AdminPricing';
+import AdminBlog from './pages/AdminBlog'; // <--- NOVO IMPORT AQUI
 import AdminLayout from './components/AdminLayout';
-import PublicBlog from './pages/PublicBlog'; // Importamos o Blog aqui
+import PublicBlog from './pages/PublicBlog';
 
-type AdminPage = 'dashboard' | 'bookings' | 'contacts' | 'pricing';
+// Adicionamos 'blog' na lista de tipos permitidos
+type AdminPage = 'dashboard' | 'bookings' | 'contacts' | 'pricing' | 'blog';
 
 function PublicSite() {
   return (
@@ -69,6 +71,7 @@ function AdminApp() {
       {currentPage === 'bookings' && <AdminBookings />}
       {currentPage === 'contacts' && <AdminContacts />}
       {currentPage === 'pricing' && <AdminPricing />}
+      {currentPage === 'blog' && <AdminBlog />} {/* <--- AQUI ESTÁ A NOVA TELA */}
     </AdminLayout>
   );
 }
@@ -77,15 +80,12 @@ function AppContent() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
   useEffect(() => {
-    // Função que atualiza o estado quando a URL muda
     const handlePathChange = () => {
       setCurrentPath(window.location.pathname);
     };
 
-    // Escuta o botão voltar/avançar do navegador
     window.addEventListener('popstate', handlePathChange);
-
-    // Pequeno "hack" para escutar navegação interna se houver
+    
     const originalPushState = window.history.pushState;
     window.history.pushState = function(...args) {
       originalPushState.apply(this, args);
@@ -97,7 +97,7 @@ function AppContent() {
     };
   }, []);
 
-  // Roteamento: Decide qual "Site" mostrar
+  // Roteamento Manual
   if (currentPath.startsWith('/admin')) {
     return <AdminApp />;
   }
@@ -106,7 +106,6 @@ function AppContent() {
     return <PublicBlog />;
   }
 
-  // Se não for nenhum acima, mostra a Home
   return <PublicSite />;
 }
 
