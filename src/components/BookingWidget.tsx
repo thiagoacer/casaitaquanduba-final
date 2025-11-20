@@ -154,4 +154,125 @@ export default function BookingWidget() {
 
   // --- WIDGET PRINCIPAL ---
   return (
-    <div className="bg-white p-6 lg:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray
+    <div className="bg-white p-6 lg:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 sticky top-24">
+      
+      {/* CABEÇALHO DE PREÇO */}
+      <div className="flex items-baseline justify-between mb-6 border-b border-gray-100 pb-6">
+        <div>
+          <span className="text-3xl font-bold text-gray-900">R$ {pricing.base_price}</span>
+          <span className="text-gray-500 ml-1">/ noite</span>
+        </div>
+        <div className="text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md">
+          Min. {pricing.min_nights} noites
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* DATAS */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Check-in</label>
+            <div className="relative group">
+              <input
+                type="date"
+                min={new Date().toISOString().split('T')[0]}
+                value={checkIn}
+                onChange={(e) => setCheckIn(e.target.value)}
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#2EC4B6] focus:border-transparent outline-none transition-all text-gray-700 font-medium"
+                required
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Check-out</label>
+            <div className="relative group">
+              <input
+                type="date"
+                min={checkIn || new Date().toISOString().split('T')[0]}
+                value={checkOut}
+                onChange={(e) => setCheckOut(e.target.value)}
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#2EC4B6] focus:border-transparent outline-none transition-all text-gray-700 font-medium"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* HÓSPEDES */}
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Hóspedes</label>
+          <div className="relative">
+            <Users className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
+            <select 
+              value={guests} 
+              onChange={(e) => setGuests(e.target.value)} 
+              className="w-full p-3 pl-11 pr-10 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#2EC4B6] focus:border-transparent outline-none appearance-none text-gray-700 font-medium cursor-pointer hover:bg-gray-100 transition-colors"
+            >
+              {[1,2,3,4,5,6,7,8].map(num => <option key={num} value={num}>{num} pessoas</option>)}
+            </select>
+            <ChevronDown className="absolute right-4 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
+          </div>
+        </div>
+
+        {/* RESUMO DE VALORES (Animado) */}
+        {totals && isAvailable && (
+          <div className="mt-6 pt-6 border-t border-gray-100 animate-in slide-in-from-top-4 fade-in duration-300 space-y-4">
+            
+            {/* Linhas de Cálculo */}
+            <div className="space-y-2 text-sm text-gray-600">
+              <div className="flex justify-between">
+                <span>{totals.nights} noites x R$ {totals.perNight} (médio)</span>
+                <span>R$ {(totals.total - pricing.cleaning_fee).toLocaleString('pt-BR')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Taxa de limpeza</span>
+                <span>R$ {pricing.cleaning_fee.toLocaleString('pt-BR')}</span>
+              </div>
+            </div>
+
+            {/* Total Final */}
+            <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+              <span className="font-bold text-gray-900">Total estimado</span>
+              <span className="text-xl font-bold text-[#0A7B9B]">R$ {totals.total.toLocaleString('pt-BR')}</span>
+            </div>
+
+            {/* Inputs de Contato */}
+            <div className="space-y-3 pt-2">
+              <input type="text" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} 
+                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2EC4B6] outline-none transition-shadow" required />
+              <input type="email" placeholder="Seu melhor email" value={email} onChange={(e) => setEmail(e.target.value)} 
+                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2EC4B6] outline-none transition-shadow" required />
+              <input type="tel" placeholder="WhatsApp / Celular" value={phone} onChange={(e) => setPhone(e.target.value)} 
+                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2EC4B6] outline-none transition-shadow" required />
+            </div>
+          </div>
+        )}
+
+        {/* AVISO DE INDISPONIBILIDADE */}
+        {!isAvailable && checkIn && checkOut && (
+          <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm flex items-center gap-3 border border-red-100 animate-in shake">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium">Ops! Essas datas já estão reservadas. Tente outros dias.</span>
+          </div>
+        )}
+
+        {/* BOTÃO DE AÇÃO */}
+        <button
+          type="submit"
+          disabled={loading || !isAvailable || !totals}
+          className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 transform
+            ${loading || !isAvailable || !totals
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' 
+              : 'bg-gradient-to-r from-[#0A7B9B] to-[#2EC4B6] text-white hover:shadow-xl hover:-translate-y-1 active:translate-y-0'
+            }`}
+        >
+          {loading ? <Loader2 className="animate-spin" /> : 'Solicitar Reserva'}
+        </button>
+
+        <p className="text-xs text-center text-gray-400 font-medium">
+          Nenhuma cobrança será feita agora.
+        </p>
+      </form>
+    </div>
+  );
+}
