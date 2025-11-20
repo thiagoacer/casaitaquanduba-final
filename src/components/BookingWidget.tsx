@@ -31,17 +31,26 @@ export default function BookingWidget() {
   
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
 
-  // 1. Carregar Preços e Datas Bloqueadas ao abrir o site
+  // 1. Carregar Preços e Datas Bloqueadas (VERSÃO BLINDADA)
   useEffect(() => {
     async function loadData() {
       // Carregar regras de preço
       const { data: prices } = await supabase.from('pricing_rules').select('*').single();
-      if (prices) setPricing(prices);
+      
+      if (prices) {
+        // Aqui fazemos a conversão forçada para garantir que são números
+        setPricing({
+          base_price: Number(prices.base_price) || 800,
+          weekend_multiplier: Number(prices.weekend_multiplier) || 1, // Se não tiver, multiplica por 1
+          cleaning_fee: Number(prices.cleaning_fee) || 0,
+          min_nights: Number(prices.min_nights) || 2
+        });
+      }
 
-      // Carregar datas bloqueadas (do Airbnb + Manuais)
+      // Carregar datas bloqueadas
       const { data: blocks } = await supabase.from('blocked_dates').select('date');
       if (blocks) {
-        setBlockedDates(blocks.map(b => b.date)); // Cria uma lista simples de datas ['2025-12-25', '2025-12-26']
+        setBlockedDates(blocks.map(b => b.date));
       }
     }
     loadData();
