@@ -132,7 +132,6 @@ export default function BookingWidget() {
     }
     setLoading(false);
   };
-
   // --- TELA DE SUCESSO ---
   if (status === 'success') {
     return (
