@@ -4,7 +4,6 @@ import { Menu, X, Home } from 'lucide-react';
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  // Verifica se estamos na página do blog para ajustar o estilo do menu
   const isBlogPage = window.location.pathname.startsWith('/blog');
 
   useEffect(() => {
@@ -12,7 +11,6 @@ export default function Header() {
       setIsScrolled(window.scrollY > 20);
     };
     
-    // Se estiver no blog, força o menu a parecer "rolado" (fundo branco) para legibilidade
     if (isBlogPage) {
       setIsScrolled(true);
     } else {
@@ -25,7 +23,7 @@ export default function Header() {
   const menuItems = [
     { label: 'Início', href: '#home' },
     { label: 'Sobre', href: '#about' },
-    { label: 'Dicas de Ilhabela', href: '/blog' }, // Novo Item
+    { label: 'Dicas de Ilhabela', href: '/blog' },
     { label: 'Localização', href: '#location' },
     { label: 'Preços', href: '#pricing' },
     { label: 'Contato', href: '#contact' }
@@ -34,7 +32,6 @@ export default function Header() {
   const handleNavigation = (href: string) => {
     setIsMenuOpen(false);
 
-    // CASO 1: É um link para outra página (ex: /blog)
     if (href.startsWith('/')) {
       window.history.pushState({}, '', href);
       window.dispatchEvent(new PopStateEvent('popstate'));
@@ -42,21 +39,17 @@ export default function Header() {
       return;
     }
 
-    // CASO 2: É um link âncora (#) mas estamos no Blog
-    // Precisamos voltar para a Home primeiro
     if (isBlogPage) {
       window.location.href = '/' + href;
       return;
     }
 
-    // CASO 3: Navegação normal na Home (Scroll Suave)
     const element = document.querySelector(href);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  // Define a cor do texto baseada no estado (rolado ou não)
   const textColor = isScrolled || isMenuOpen ? 'text-gray-900' : 'text-white';
   const hoverColor = 'hover:text-[#0A7B9B]';
 
@@ -67,7 +60,6 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           
-          {/* LOGO - Clicar nele volta para o topo ou para a home */}
           <button 
             onClick={() => handleNavigation('#home')} 
             className="flex items-center gap-2 group"
@@ -78,7 +70,6 @@ export default function Header() {
             </span>
           </button>
 
-          {/* MENU DESKTOP */}
           <nav className="hidden md:flex items-center gap-8">
             {menuItems.map((item) => (
               <button
@@ -90,7 +81,7 @@ export default function Header() {
               </button>
             ))}
             <a
-              href="https://wa.me/5511992364885?text=Olá!%20Gostaria%20de%20consultar%20disponibilidade%20para%20a%20Casa%20Itaquanduba"
+              href="https://wa.me/551231990710?text=Olá!%20Gostaria%20de%20consultar%20disponibilidade%20para%20a%20Casa%20Itaquanduba"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-[#2EC4B6] text-white px-6 py-2 rounded-full font-semibold hover:bg-[#26a89c] transition-colors shadow-sm"
@@ -99,7 +90,6 @@ export default function Header() {
             </a>
           </nav>
 
-          {/* BOTÃO MOBILE (HAMBÚRGUER) */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className={`md:hidden ${textColor}`}
@@ -109,7 +99,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* MENU MOBILE ABERTO */}
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 h-screen absolute w-full">
           <nav className="flex flex-col px-4 py-4 gap-2">
@@ -123,7 +112,7 @@ export default function Header() {
               </button>
             ))}
             <a
-              href="https://wa.me/5511992364885?text=Olá!%20Gostaria%20de%20consultar%20disponibilidade%20para%20a%20Casa%20Itaquanduba"
+              href="https://wa.me/551231990710?text=Olá!%20Gostaria%20de%20consultar%20disponibilidade%20para%20a%20Casa%20Itaquanduba"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 bg-[#2EC4B6] text-white px-6 py-4 rounded-xl font-bold text-center text-lg hover:bg-[#26a89c] transition-colors"
