@@ -1,9 +1,9 @@
 import React from 'react';
-import { LayoutDashboard, CalendarDays, Users, DollarSign, LogOut, FileText } from 'lucide-react'; // Adicionei FileText
+import { LayoutDashboard, CalendarDays, Users, DollarSign, LogOut, FileText, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-// Adicionei 'blog' na lista de tipos
-type AdminPage = 'dashboard' | 'bookings' | 'contacts' | 'pricing' | 'blog';
+// Adicionei 'calendar' na lista de tipos permitidos
+type AdminPage = 'dashboard' | 'bookings' | 'contacts' | 'pricing' | 'blog' | 'calendar';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -17,9 +17,10 @@ export default function AdminLayout({ children, currentPage, onNavigate }: Admin
   const menuItems = [
     { id: 'dashboard', label: 'Visão Geral', icon: LayoutDashboard },
     { id: 'bookings', label: 'Reservas', icon: CalendarDays },
+    { id: 'calendar', label: 'Sincronização (iCal)', icon: Calendar }, // <--- NOVO ITEM
     { id: 'contacts', label: 'Contatos', icon: Users },
     { id: 'pricing', label: 'Preços', icon: DollarSign },
-    { id: 'blog', label: 'Blog', icon: FileText }, // <--- NOVO ITEM AQUI
+    { id: 'blog', label: 'Blog', icon: FileText },
   ];
 
   return (
