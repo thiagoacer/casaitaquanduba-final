@@ -1,114 +1,71 @@
-import { useState } from 'react';
+import React from 'react';
+import { LayoutDashboard, CalendarDays, Users, DollarSign, LogOut, FileText } from 'lucide-react'; // Adicionei FileText
 import { useAuth } from '../contexts/AuthContext';
-import { Home, Calendar, MessageSquare, DollarSign, LogOut, Menu, X } from 'lucide-react';
+
+// Adicionei 'blog' na lista de tipos
+type AdminPage = 'dashboard' | 'bookings' | 'contacts' | 'pricing' | 'blog';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  currentPage: 'dashboard' | 'bookings' | 'contacts' | 'pricing';
-  onNavigate: (page: 'dashboard' | 'bookings' | 'contacts' | 'pricing') => void;
+  currentPage: AdminPage;
+  onNavigate: (page: AdminPage) => void;
 }
 
 export default function AdminLayout({ children, currentPage, onNavigate }: AdminLayoutProps) {
   const { signOut } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navigation = [
-    { name: 'Dashboard', page: 'dashboard' as const, icon: Home },
-    { name: 'Reservas', page: 'bookings' as const, icon: Calendar },
-    { name: 'Contatos', page: 'contacts' as const, icon: MessageSquare },
-    { name: 'Preços', page: 'pricing' as const, icon: DollarSign },
+  const menuItems = [
+    { id: 'dashboard', label: 'Visão Geral', icon: LayoutDashboard },
+    { id: 'bookings', label: 'Reservas', icon: CalendarDays },
+    { id: 'contacts', label: 'Contatos', icon: Users },
+    { id: 'pricing', label: 'Preços', icon: DollarSign },
+    { id: 'blog', label: 'Blog', icon: FileText }, // <--- NOVO ITEM AQUI
   ];
 
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-[#0A7B9B] to-[#2EC4B6] bg-clip-text text-transparent">
-                Casa Itaquanduba Admin
-              </h1>
-            </div>
-
-            <div className="hidden md:flex items-center space-x-1">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPage === item.page;
-                return (
-                  <button
-                    key={item.page}
-                    onClick={() => onNavigate(item.page)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                      isActive
-                        ? 'bg-gradient-to-r from-[#0A7B9B] to-[#2EC4B6] text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {item.name}
-                  </button>
-                );
-              })}
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-red-600 hover:bg-red-50 transition-all ml-4"
-              >
-                <LogOut className="w-5 h-5" />
-                Sair
-              </button>
-            </div>
-
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-all"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-gray-200 fixed h-full z-10">
+        <div className="h-16 flex items-center px-6 border-b border-gray-200">
+          <span className="text-xl font-bold text-[#0A7B9B]">Admin</span>
         </div>
 
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPage === item.page;
-                return (
-                  <button
-                    key={item.page}
-                    onClick={() => {
-                      onNavigate(item.page);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all ${
-                      isActive
-                        ? 'bg-gradient-to-r from-[#0A7B9B] to-[#2EC4B6] text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {item.name}
-                  </button>
-                );
-              })}
+        <nav className="p-4 space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
               <button
-                onClick={handleSignOut}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-red-600 hover:bg-red-50 transition-all"
+                key={item.id}
+                onClick={() => onNavigate(item.id as AdminPage)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  currentPage === item.id
+                    ? 'bg-[#E5F6F5] text-[#0A7B9B]'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
               >
-                <LogOut className="w-5 h-5" />
-                Sair
+                <Icon className="w-5 h-5" />
+                {item.label}
               </button>
-            </div>
-          </div>
-        )}
-      </nav>
+            );
+          })}
+        </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+        <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
+          <button
+            onClick={() => signOut()}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <LogOut className="w-5 h-5" />
+            Sair
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 ml-64 p-8">
+        <div className="max-w-7xl mx-auto">
+          {children}
+        </div>
       </main>
     </div>
   );
