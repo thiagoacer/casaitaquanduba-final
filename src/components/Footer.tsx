@@ -58,7 +58,7 @@ export default function Footer() {
             <ul className="space-y-2 text-gray-400 text-sm">
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                (11) 99236-4885
+                (12) 3199-0710
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
