@@ -19,6 +19,7 @@ import AdminBookings from './pages/AdminBookings';
 import AdminContacts from './pages/AdminContacts';
 import AdminPricing from './pages/AdminPricing';
 import AdminLayout from './components/AdminLayout';
+import PublicBlog from './pages/PublicBlog'; // Importamos o Blog aqui
 
 type AdminPage = 'dashboard' | 'bookings' | 'contacts' | 'pricing';
 
@@ -73,24 +74,40 @@ function AdminApp() {
 }
 
 function AppContent() {
-  const [isAdminRoute, setIsAdminRoute] = useState(false);
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
   useEffect(() => {
-    const checkRoute = () => {
-      setIsAdminRoute(window.location.pathname === '/admin' || window.location.hash === '#/admin');
+    // Função que atualiza o estado quando a URL muda
+    const handlePathChange = () => {
+      setCurrentPath(window.location.pathname);
     };
 
-    checkRoute();
-    window.addEventListener('hashchange', checkRoute);
-    window.addEventListener('popstate', checkRoute);
+    // Escuta o botão voltar/avançar do navegador
+    window.addEventListener('popstate', handlePathChange);
+
+    // Pequeno "hack" para escutar navegação interna se houver
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function(...args) {
+      originalPushState.apply(this, args);
+      handlePathChange();
+    };
 
     return () => {
-      window.removeEventListener('hashchange', checkRoute);
-      window.removeEventListener('popstate', checkRoute);
+      window.removeEventListener('popstate', handlePathChange);
     };
   }, []);
 
-  return isAdminRoute ? <AdminApp /> : <PublicSite />;
+  // Roteamento: Decide qual "Site" mostrar
+  if (currentPath.startsWith('/admin')) {
+    return <AdminApp />;
+  }
+  
+  if (currentPath.startsWith('/blog')) {
+    return <PublicBlog />;
+  }
+
+  // Se não for nenhum acima, mostra a Home
+  return <PublicSite />;
 }
 
 function App() {
