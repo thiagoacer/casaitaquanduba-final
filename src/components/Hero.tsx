@@ -48,7 +48,7 @@ export default function Hero() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-2">
           <a
-            href="https://wa.me/5511992364885?text=Olá!%20Gostaria%20de%20consultar%20disponibilidade%20para%20a%20Casa%20Itaquanduba"
+            href="https://wa.me/551231990710?text=Olá!%20Gostaria%20de%20consultar%20disponibilidade%20para%20a%20Casa%20Itaquanduba"
             target="_blank"
             rel="noopener noreferrer"
             className="group bg-[#2EC4B6] text-white px-8 py-4 rounded-full font-bold text-base sm:text-lg hover:bg-white hover:text-[#0A7B9B] transition-all active:scale-95 shadow-2xl w-full sm:w-auto min-h-[56px] flex items-center justify-center"
