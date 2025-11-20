@@ -16,14 +16,15 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminBookings from './pages/AdminBookings';
+import AdminCalendar from './pages/AdminCalendar'; // <--- NOVO IMPORT
 import AdminContacts from './pages/AdminContacts';
 import AdminPricing from './pages/AdminPricing';
-import AdminBlog from './pages/AdminBlog'; // <--- NOVO IMPORT AQUI
+import AdminBlog from './pages/AdminBlog';
 import AdminLayout from './components/AdminLayout';
 import PublicBlog from './pages/PublicBlog';
 
-// Adicionamos 'blog' na lista de tipos permitidos
-type AdminPage = 'dashboard' | 'bookings' | 'contacts' | 'pricing' | 'blog';
+// Adicionamos 'calendar' na lista de tipos
+type AdminPage = 'dashboard' | 'bookings' | 'contacts' | 'pricing' | 'blog' | 'calendar';
 
 function PublicSite() {
   return (
@@ -69,9 +70,10 @@ function AdminApp() {
     <AdminLayout currentPage={currentPage} onNavigate={setCurrentPage}>
       {currentPage === 'dashboard' && <AdminDashboard />}
       {currentPage === 'bookings' && <AdminBookings />}
+      {currentPage === 'calendar' && <AdminCalendar />} {/* <--- NOVA TELA */}
       {currentPage === 'contacts' && <AdminContacts />}
       {currentPage === 'pricing' && <AdminPricing />}
-      {currentPage === 'blog' && <AdminBlog />} {/* <--- AQUI ESTÁ A NOVA TELA */}
+      {currentPage === 'blog' && <AdminBlog />}
     </AdminLayout>
   );
 }
@@ -97,7 +99,6 @@ function AppContent() {
     };
   }, []);
 
-  // Roteamento Manual
   if (currentPath.startsWith('/admin')) {
     return <AdminApp />;
   }
