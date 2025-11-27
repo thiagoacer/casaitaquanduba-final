@@ -10,6 +10,7 @@ interface BlogPost {
   content: string;
   image_url: string;
   published: boolean;
+  published_at: string; // Nova coluna
   created_at: string;
 }
 
@@ -19,21 +20,34 @@ export default function AdminBlog() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentPost, setCurrentPost] = useState<Partial<BlogPost>>({});
 
-  // Carregar posts
   useEffect(() => {
     loadPosts();
   }, []);
 
   const loadPosts = async () => {
     setLoading(true);
-    const { data } = await supabase.from('blog_posts').select('*').order('created_at', { ascending: false });
+    // Ordena pela data de publicação (se houver) ou criação
+    const { data } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
     if (data) setPosts(data);
     setLoading(false);
   };
 
-  // Salvar (Criar ou Atualizar)
   const handleSave = async () => {
     if (!currentPost.title || !currentPost.slug) return alert('Título e Slug são obrigatórios');
+
+    // LÓGICA DE DATA DE PUBLICAÇÃO INTELIGENTE
+    let finalPublishedAt = currentPost.published_at;
+
+    // Se o usuário marcou "Publicar" E (não tinha data antes OU era rascunho)
+    if (currentPost.published && !finalPublishedAt) {
+        finalPublishedAt = new Date().toISOString();
+    }
+    // Se o usuário desmarcou "Publicar" (virou rascunho), podemos manter a data antiga ou limpar. 
+    // Geralmente mantemos para histórico, mas o status 'published: false' esconde o post.
 
     const postData = {
       title: currentPost.title,
@@ -41,16 +55,15 @@ export default function AdminBlog() {
       excerpt: currentPost.excerpt,
       content: currentPost.content,
       image_url: currentPost.image_url,
-      published: currentPost.published || false
+      published: currentPost.published || false,
+      published_at: finalPublishedAt // Salva a data correta
     };
 
     let error;
     if (currentPost.id) {
-      // Atualizar
       const { error: err } = await supabase.from('blog_posts').update(postData).eq('id', currentPost.id);
       error = err;
     } else {
-      // Criar Novo
       const { error: err } = await supabase.from('blog_posts').insert([postData]);
       error = err;
     }
@@ -64,7 +77,6 @@ export default function AdminBlog() {
     }
   };
 
-  // Deletar
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este post?')) return;
     const { error } = await supabase.from('blog_posts').delete().eq('id', id);
@@ -85,14 +97,13 @@ export default function AdminBlog() {
         </button>
       </div>
 
-      {/* LISTA DE POSTS */}
       {!isEditing ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="p-4">Título</th>
-                <th className="p-4">Data</th>
+                <th className="p-4">Publicado em</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Ações</th>
               </tr>
@@ -101,7 +112,12 @@ export default function AdminBlog() {
               {posts.map(post => (
                 <tr key={post.id} className="hover:bg-gray-50">
                   <td className="p-4 font-medium">{post.title}</td>
-                  <td className="p-4 text-sm text-gray-500">{new Date(post.created_at).toLocaleDateString('pt-BR')}</td>
+                  {/* Exibe a data de publicação se existir, senão avisa que é rascunho sem data */}
+                  <td className="p-4 text-sm text-gray-500">
+                    {post.published_at 
+                      ? new Date(post.published_at).toLocaleDateString('pt-BR') 
+                      : '-'}
+                  </td>
                   <td className="p-4">
                     <span className={`px-2 py-1 text-xs rounded-full ${post.published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                       {post.published ? 'Publicado' : 'Rascunho'}
@@ -117,7 +133,6 @@ export default function AdminBlog() {
           </table>
         </div>
       ) : (
-        /* FORMULÁRIO DE EDIÇÃO */
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">{currentPost.id ? 'Editar Post' : 'Novo Post'}</h2>
@@ -133,7 +148,8 @@ export default function AdminBlog() {
                 onChange={e => setCurrentPost({...currentPost, title: e.target.value})}
               />
             </div>
-            <div>
+            {/* ... MANTENHA OS OUTROS CAMPOS IGUAIS (Slug, Resumo, URL da Imagem, Conteúdo) ... */}
+             <div>
               <label className="block text-sm font-medium text-gray-700">Slug (URL amigável)</label>
               <input 
                 className="w-full p-2 border rounded-md" 
@@ -168,20 +184,34 @@ export default function AdminBlog() {
                 onChange={e => setCurrentPost({...currentPost, content: e.target.value})}
               />
             </div>
-            <div className="flex items-center gap-2">
+
+            {/* CHECKBOX MELHORADO */}
+            <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-lg">
               <input 
                 type="checkbox" 
                 id="published"
                 checked={currentPost.published || false}
                 onChange={e => setCurrentPost({...currentPost, published: e.target.checked})}
+                className="w-4 h-4 text-[#2EC4B6] rounded focus:ring-[#2EC4B6]"
               />
-              <label htmlFor="published" className="text-sm font-medium text-gray-700">Publicar agora?</label>
+              <div>
+                <label htmlFor="published" className="text-sm font-bold text-gray-900 block">
+                  Status: {currentPost.published ? 'Publicado' : 'Rascunho'}
+                </label>
+                <p className="text-xs text-gray-500">
+                  {currentPost.published 
+                    ? 'O post ficará visível no site.' 
+                    : 'O post ficará oculto para os visitantes.'}
+                </p>
+              </div>
             </div>
           </div>
 
           <div className="pt-4 flex justify-end gap-2">
             <button onClick={() => setIsEditing(false)} className="px-4 py-2 border rounded-lg text-gray-600">Cancelar</button>
-            <button onClick={handleSave} className="px-4 py-2 bg-[#2EC4B6] text-white rounded-lg hover:bg-[#25a094]">Salvar Post</button>
+            <button onClick={handleSave} className="px-4 py-2 bg-[#2EC4B6] text-white rounded-lg hover:bg-[#25a094]">
+              {currentPost.id ? 'Salvar Alterações' : 'Criar Post'}
+            </button>
           </div>
         </div>
       )}
