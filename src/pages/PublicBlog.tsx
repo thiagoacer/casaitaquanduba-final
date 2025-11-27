@@ -14,7 +14,7 @@ interface BlogPost {
   content: string;
   image_url: string;
   created_at: string;
-  published_at: string; // Adicionamos este campo na interface
+  published_at: string;
 }
 
 export default function PublicBlog() {
@@ -36,7 +36,7 @@ export default function PublicBlog() {
         .from('blog_posts')
         .select('*')
         .eq('published', true)
-        .order('published_at', { ascending: false }); // MUDANÇA 1: Ordenar pela data de publicação
+        .order('published_at', { ascending: false });
 
       if (error) throw error;
       if (data) setPosts(data);
@@ -59,7 +59,6 @@ export default function PublicBlog() {
     return () => window.removeEventListener('popstate', onLocationChange);
   }, []);
 
-  // Função auxiliar para formatar a data
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('pt-BR');
@@ -96,7 +95,6 @@ export default function PublicBlog() {
             <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
               <span className="flex items-center">
                 <Calendar className="w-4 h-4 mr-1" /> 
-                {/* MUDANÇA 2: Usar published_at em vez de created_at */}
                 {formatDate(currentPost.published_at || currentPost.created_at)}
               </span>
               <span className="flex items-center"><Clock className="w-4 h-4 mr-1" /> Leitura rápida</span>
@@ -130,4 +128,51 @@ export default function PublicBlog() {
         </p>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {posts.length === 0 ? (
+          <div className="text-center text-gray-500 py-12">
+            <p className="text-xl">Em breve publicaremos nossas melhores dicas aqui!</p>
+            <p className="text-sm mt-2">Volte daqui a pouco.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {posts.map((post) => (
+              <div 
+                key={post.id} 
+                onClick={() => navigate(`/blog/${post.slug}`)}
+                className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden group"
+              >
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={post.image_url} 
+                    alt={post.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                    <span className="flex items-center">
+                      <Calendar className="w-3 h-3 mr-1" /> 
+                      {formatDate(post.published_at || post.created_at)}
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                    {post.title}
+                  </h2>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                    {post.excerpt}
+                  </p>
+                  <span className="inline-flex items-center text-blue-600 font-medium text-sm group-hover:underline">
+                    Ler artigo completo <ChevronRight className="w-4 h-4 ml-1" />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <Footer />
+      <WhatsAppButton />
+    </div>
+  );
+}
