@@ -4,17 +4,17 @@ import Footer from '../components/Footer';
 import WhatsAppButton from '../components/WhatsAppButton';
 import { supabase } from '../lib/supabase'; // Conexão com o Banco
 import { ArrowLeft, Calendar, Clock, ChevronRight } from 'lucide-react';
-import BlogInteractions from '../components/BlogInteractions'; // <--- NOVO IMPORT
+import BlogInteractions from '../components/BlogInteractions';
 
-// Definindo o tipo de dados que vem do banco
 interface BlogPost {
   id: string;
   slug: string;
   title: string;
   excerpt: string;
   content: string;
-  image_url: string; // Atenção: no banco chamamos de image_url
+  image_url: string;
   created_at: string;
+  published_at: string; // Adicionamos este campo na interface
 }
 
 export default function PublicBlog() {
@@ -22,13 +22,9 @@ export default function PublicBlog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Pega o "slug" da URL
   const slug = currentPath.includes('/blog/') ? currentPath.split('/blog/')[1] : null;
-  
-  // Procura o post específico na lista de posts baixados
   const currentPost = slug ? posts.find(p => p.slug === slug) : null;
 
-  // --- CARREGAR POSTS DO BANCO ---
   useEffect(() => {
     fetchPosts();
   }, []);
@@ -36,12 +32,11 @@ export default function PublicBlog() {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      // Busca apenas os posts marcados como "published = true"
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('published', true)
-        .order('created_at', { ascending: false });
+        .order('published_at', { ascending: false }); // MUDANÇA 1: Ordenar pela data de publicação
 
       if (error) throw error;
       if (data) setPosts(data);
@@ -52,7 +47,6 @@ export default function PublicBlog() {
     }
   };
 
-  // --- NAVEGAÇÃO ---
   const navigate = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -65,7 +59,12 @@ export default function PublicBlog() {
     return () => window.removeEventListener('popstate', onLocationChange);
   }, []);
 
-  // --- TELA DE CARREGAMENTO ---
+  // Função auxiliar para formatar a data
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -74,7 +73,6 @@ export default function PublicBlog() {
     );
   }
 
-  // --- TELA DO POST INDIVIDUAL (ARTIGO) ---
   if (currentPost) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -98,7 +96,8 @@ export default function PublicBlog() {
             <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
               <span className="flex items-center">
                 <Calendar className="w-4 h-4 mr-1" /> 
-                {new Date(currentPost.created_at).toLocaleDateString('pt-BR')}
+                {/* MUDANÇA 2: Usar published_at em vez de created_at */}
+                {formatDate(currentPost.published_at || currentPost.created_at)}
               </span>
               <span className="flex items-center"><Clock className="w-4 h-4 mr-1" /> Leitura rápida</span>
             </div>
@@ -110,7 +109,6 @@ export default function PublicBlog() {
               dangerouslySetInnerHTML={{ __html: currentPost.content }}
             />
 
-            {/* Componente de Curtidas e Comentários */}
             <BlogInteractions slug={currentPost.slug} />
 
           </article>
@@ -121,7 +119,6 @@ export default function PublicBlog() {
     );
   }
 
-  // --- TELA DA LISTAGEM (HOME DO BLOG) ---
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -133,51 +130,4 @@ export default function PublicBlog() {
         </p>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {posts.length === 0 ? (
-          <div className="text-center text-gray-500 py-12">
-            <p className="text-xl">Em breve publicaremos nossas melhores dicas aqui!</p>
-            <p className="text-sm mt-2">Volte daqui a pouco.</p>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {posts.map((post) => (
-              <div 
-                key={post.id} 
-                onClick={() => navigate(`/blog/${post.slug}`)}
-                className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden group"
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={post.image_url} 
-                    alt={post.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
-                    <span className="flex items-center">
-                      <Calendar className="w-3 h-3 mr-1" /> 
-                      {new Date(post.created_at).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                    {post.title}
-                  </h2>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {post.excerpt}
-                  </p>
-                  <span className="inline-flex items-center text-blue-600 font-medium text-sm group-hover:underline">
-                    Ler artigo completo <ChevronRight className="w-4 h-4 ml-1" />
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      <Footer />
-      <WhatsAppButton />
-    </div>
-  );
-}
+      <div className="max-w-7xl mx-auto px-4
