@@ -2,6 +2,17 @@
   "rewrites": [
     {
       "source": "/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "User-Agent",
+          "value": "(.*googlebot.*|.*bingbot.*|.*yandex.*|.*baiduspider.*|.*twitterbot.*|.*facebookexternalhit.*|.*rogerbot.*|.*linkedinbot.*|.*embedly.*|.*quora link preview.*|.*showyoubot.*|.*outbrain.*|.*pinterest/0\\..*|.*developers.google.com/+/web/snippet.*|.*slackbot.*|.*vkShare.*|.*W3C_Validator.*|.*redditbot.*|.*Applebot.*|.*WhatsApp.*|.*flipboard.*|.*tumblr.*|.*bitlybot.*|.*SkypeUriPreview.*|.*nuzzel.*|.*Discordbot.*|.*Google Page Speed.*|.*Qwantify.*|.*pinterest.*|.*wordpress.*|.*x-buffer.*)"
+        }
+      ],
+      "destination": "https://service.prerender.io/https://casaitaquanduba.com.br/$1"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
